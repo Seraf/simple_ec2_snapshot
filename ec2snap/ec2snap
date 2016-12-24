@@ -681,14 +681,22 @@ def main():
         sys.exit(1)
     else:
         # Create action
-        selected_instances = ManageSnapshot(arg.region, arg.key_id,
-                                            arg.access_key, arg.instance,
-                                            arg.tags, arg.dry_run, arg.timeout,
-                                            arg.cold_snap, arg.limit,
-                                            arg.no_root_device, arg.add_tags,
-                                            arg.max_age, arg.no_snap,
-                                            arg.keep_last_snapshots,
-                                            snap_filter)
+        selected_instances = ManageSnapshot(region=arg.region,
+                                            key_id=arg.key_id,
+                                            access_key=arg.access_key,
+                                            instance_list=arg.instance,
+                                            tags=arg.tags,
+                                            dry_run=arg.dry_run,
+                                            timeout=arg.timeout,
+                                            cold_snap=arg.cold_snap,
+                                            limit=arg.limit,
+                                            no_root_device=arg.no_root_device,
+                                            add_tags=_add_tags,
+                                            max_age=arg.max_age,
+                                            no_snap=arg.no_snap,
+                                            keep_last_snapshots=arg.keep_last_snapshots,
+                                            snapshot_filter=snap_filter)
+
         # Calculate max snapshot age
         if len(arg.max_age) > 0:
             selected_instances.calulate_max_snap_age()
