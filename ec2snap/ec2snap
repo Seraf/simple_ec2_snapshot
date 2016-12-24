@@ -336,10 +336,10 @@ class ManageSnapshot:
         :param iid: EC2 instance ID
         :type iid: str
 
-        :return rcode: 0 ok / 1 failed
+        :return rcode: True or False
         :rtype: bool
         """
-        rcode = 0
+        rcode = True
 
         # Name cold and hot snapshots
         if self._cold_snap is False:
@@ -360,7 +360,7 @@ class ManageSnapshot:
                                  ' (', vol, ')'])
             if self._dry_run:
                 self.logger.info("%s snapshot made for %s(%s)" % (stype, vol, device))
-                return rcode
+                return True
 
             try:
                 snap_id = self._conn.create_snapshot(vol, snap_name)
@@ -370,12 +370,12 @@ class ManageSnapshot:
                     current_tags = {'type': stype, 'volume': vol, 'device': device, 'instance name': iid.name}
                 tag_list = dict(current_tags, **self._add_tags)
                 snap_id.add_tags(tag_list)
+                self.logger.info("%s snapshot made for %s(%s) - %s" %
+                                (stype, vol, device, snap_id.id))
             except Exception as e:
                 self.logger.critical("%s snapshot failed for %s(%s) [%s]" %
                                      (stype, vol, device, e))
-                rcode = 1
-            self.logger.info("%s snapshot made for %s(%s) - %s" %
-                             (stype, vol, device, snap_id.id))
+                rcode = False
         return rcode
 
     def calulate_max_snap_age(self):
@@ -457,8 +457,7 @@ class ManageSnapshot:
                             continue
 
                 # Creating Snapshots
-                rcode = self._create_inst_snap(iid)
-                if rcode != 0:
+                if not self._create_inst_snap(iid):
                     error_number += 1
 
                 # Starting VM if was running
@@ -471,9 +470,7 @@ class ManageSnapshot:
                         except Exception as e:
                             self.logger.critical("Instance failed to start: %s"
                                                  % e)
-                            # Only increment errors if snapshot succeed
-                            if rcode == 0:
-                                error_number += 1
+                            error_number += 1
                         self._check_inst_state(iid, 'running')
 
             # Delete old Snapshots
