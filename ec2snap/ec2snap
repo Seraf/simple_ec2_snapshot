@@ -358,24 +358,24 @@ class ManageSnapshot:
             snap_name = ''.join([iid.instance_id,
                                  ' (', iid.name, ') - ', stype, ' ', device,
                                  ' (', vol, ')'])
-            if self._dry_run is False:
-                try:
-                    snap_id = self._conn.create_snapshot(vol, snap_name)
-                    tags_objects = self._conn.get_all_tags(filters={'resource_id': vol})
-                    current_tags = {tag.name: tag.value for tag in tags_objects}
-                    if bool(current_tags) is False:
-                        current_tags = {'type': stype, 'volume': vol, 'device': device, 'instance name': iid.name}
-                    tag_list = dict(current_tags, **self._add_tags)
-                    snap_id.add_tags(tag_list)
-                except Exception as e:
-                    self.logger.critical("%s snapshot failed for %s(%s) [%s]" %
-                                         (stype, vol, device, e))
-                    rcode = 1
-                self.logger.info("%s snapshot made for %s(%s) - %s" %
-                                 (stype, vol, device, snap_id.id))
-            else:
-                self.logger.info("%s snapshot made for %s(%s)" %
-                                 (stype, vol, device))
+            if self._dry_run:
+                self.logger.info("%s snapshot made for %s(%s)" % (stype, vol, device))
+                return rcode
+
+            try:
+                snap_id = self._conn.create_snapshot(vol, snap_name)
+                tags_objects = self._conn.get_all_tags(filters={'resource_id': vol})
+                current_tags = {tag.name: tag.value for tag in tags_objects}
+                if bool(current_tags) is False:
+                    current_tags = {'type': stype, 'volume': vol, 'device': device, 'instance name': iid.name}
+                tag_list = dict(current_tags, **self._add_tags)
+                snap_id.add_tags(tag_list)
+            except Exception as e:
+                self.logger.critical("%s snapshot failed for %s(%s) [%s]" %
+                                     (stype, vol, device, e))
+                rcode = 1
+            self.logger.info("%s snapshot made for %s(%s) - %s" %
+                             (stype, vol, device, snap_id.id))
         return rcode
 
     def calulate_max_snap_age(self):
