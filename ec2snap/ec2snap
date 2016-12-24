@@ -24,7 +24,7 @@ import datetime
 import logging
 from collections import OrderedDict
 
-__version__ = 'v0.5.2'
+__version__ = 'v0.5.3'
 
 LVL = {'INFO': logging.INFO,
        'DEBUG': logging.DEBUG,
