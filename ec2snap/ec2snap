@@ -146,6 +146,9 @@ class ManageSnapshot:
         :param tags: filter on this tags
         :type tags: dict
 
+        :param add_tags: Tags to add on new snapshots
+        :type add_tags: dict
+
         :param dry_run: run without applying, just for test
         :type dry_run: bool
 
@@ -184,10 +187,7 @@ class ManageSnapshot:
         self._instance_list = instance_list
         self._tags = tags
         self._snapshot_filter = snapshot_filter
-        # receive ["key1:value1", "key2:value2"], transform it to: {key1: value1, key2: value2}
-        self._add_tags = {}
-        if len(add_tags) > 0:
-            self._add_tags = {elem.split(':')[0]: elem.split(':')[1] for elem in add_tags[0]}
+        self._add_tags = add_tags
         self._dry_run = dry_run
         self._timeout = timeout
         self._cold_snap = cold_snap
@@ -578,8 +578,8 @@ def main():
                         help='Credentials file path')
     parser.add_argument('-p', '--profile', action='store',
                         type=str, default='default', metavar='CRED_PROFILE',
-                        help='Credentials profile file defined in \
-                              credentials file')
+                        help='Credentials profile file defined in '
+                              'credentials file')
 
     parser.add_argument('-i', '--instance', action='append',
                         default=[], metavar='INSTANCE_ID',
@@ -589,26 +589,27 @@ def main():
                         help='Select tags with values (ex: tagname value)')
     parser.add_argument('--snap-filter', action='append', type=str,
                         default=[], metavar='TAG VALUE', nargs=2,
-                        help='Filter snapshot by tags to select on which one you want to apply retention')
-    parser.add_argument('-e', '--add_tags', action='append', type=str,
-                        default=[], metavar='ARG', nargs='*',
+                        help='Filter snapshot by tags to select on which one '
+                             'you want to apply retention')
+    parser.add_argument('-e', '--add_tags', action='store', type=str,
+                        default=[], metavar='KEY:VALUE', nargs='+',
                         help='Tags added to snapshots (ex: tag1:value1 ...')
 
     parser.add_argument('-u', '--dry_run', action='store_false', default=True,
-                        help='Define if it should make snapshot or just \
-                        dry run')
+                        help='Dry run mode, if enable no action will be performed. '
+                             'default : True')
     parser.add_argument('-l', '--limit',
                         action='store', default=-1, type=int,
                         help=' '.join(['Limit the number of snapshot (can be',
                                        'usefull with auto-scaling groups)']))
     parser.add_argument('-H', '--cold_snap',
                         action='store_true', default=False,
-                        help='Make cold snapshot for a better consistency \
-                        (Recommended)')
+                        help='Make cold snapshot for a better consistency '
+                        '(Recommended)')
     parser.add_argument('-m', '--timeout', action='store',
                         type=int, default=600, metavar='COLDSNAP_TIMEOUT',
-                        help='Instance timeout (in seconds) for stop and start \
-                              during a cold snapshot')
+                        help='Instance timeout (in seconds) for stop and start '
+                              'during a cold snapshot')
     parser.add_argument('-o', '--no_root_device',
                         action='store_true', default=False,
                         help='Do not snapshot root device')
@@ -616,15 +617,15 @@ def main():
     parser.add_argument('-g', '--max_age',
                         type=str, default=[],
                         metavar='ARG', nargs=2,
-                        help='Maximum snapshot age to keep \
-                        (<int> <s/m/h/d/w/M/y>) (ex: 1 h for one hour)')
+                        help='Maximum snapshot age to keep '
+                        '(<int> <s/m/h/d/w/M/y>) (ex: 1 h for one hour)')
     parser.add_argument('-d', '--keep_last_snapshots',
                         action='store', default=0, type=int,
                         help='Keep the x last snapshots')
     parser.add_argument('-n', '--no_snap',
                         action='store_true', default=False,
-                        help='Do not make snapshot \
-                        (useful when combien to -g option)')
+                        help='Do not make snapshot '
+                        '(useful when combien to -g option)')
 
     parser.add_argument('-f', '--file_output', metavar='FILE',
                         default=None, action='store', type=str,
@@ -664,11 +665,12 @@ def main():
             print("Don't have permission to read credentials file")
             sys.exit(1)
 
-    if arg.add_tags is not None and len(arg.add_tags) > 0:
-        for elem in arg.add_tags[0]:
-            if elem.find(':') == -1:
-                print("Tag '%s' has wrong format, missing separator ':'" % elem)
-                sys.exit(1)
+    # receive ["key1:value1", "key2:value2"], transform it to: {key1: value1, key2: value2}
+    try:
+        _add_tags = {elem.split(':')[0]: elem.split(':')[1] for elem in arg.add_tags}
+    except IndexError:
+        print("add_tags has wrong format, missing separator ':' %s" % arg.add_tags)
+        sys.exit(1)
 
     # Convert snap_filter into a dict of tags
     snap_filter = { 'tag:%s' % key:value for (key, value) in arg.snap_filter}
