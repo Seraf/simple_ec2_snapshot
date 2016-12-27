@@ -238,13 +238,14 @@ Another solution to manage the retention of your snapshots is to specify how man
 Here is the help with the complete list of options:
 ```
 > ./ec2snap.py 
-usage: ec2snap.py [-h] [-r REGION] [-k KEY_ID] [-a ACCESS_KEY]
-                    [-c CREDENTIALS] [-p CRED_PROFILE] [-i INSTANCE_ID]
-                    [-t ARG ARG] [--snap-filter TAG VALUE TAG VALUE]
-                    [-e [ARG [ARG ...]]] [-u] [-l LIMIT] [-H]
-                    [-m COLDSNAP_TIMEOUT] [-o] [-g ARG ARG]
-                    [-d KEEP_LAST_SNAPSHOTS] [-n] [-f FILE] [-s] [-v LEVEL]
-                    [-V]
+usage: ec2snap [-h] [-r REGION] [-k KEY_ID] [-a ACCESS_KEY] [-c CREDENTIALS]
+               [-p CRED_PROFILE] [-i INSTANCE_ID] [-t ARG ARG]
+               [--snap-filter TAG VALUE TAG VALUE]
+               [-e KEY:VALUE [KEY:VALUE ...]] [-u] [-l LIMIT] [-H]
+               [-m COLDSNAP_TIMEOUT] [-o] [-g ARG ARG]
+               [-d KEEP_LAST_SNAPSHOTS] [-n] [--ignore-in-use-snapshot]
+               [-f FILE] [-s] [-v LEVEL] [-V]
+
 
 Simple EC2 Snapshot utility
 
@@ -269,11 +270,11 @@ optional arguments:
   --snap-filter TAG VALUE TAG VALUE
                         Filter snapshot by tags to select on which one you
                         want to apply retention (default: [])
-  -e [ARG [ARG ...]], --add_tags [ARG [ARG ...]]
+  -e KEY:VALUE [KEY:VALUE ...], --add_tags KEY:VALUE [KEY:VALUE ...]
                         Tags added to snapshots (ex: tag1:value1 ... (default:
                         [])
-  -u, --dry_run         Define if it should make snapshot or just dry run
-                        (default: True)
+  -u, --dry_run         Dry run mode, if enable no action will be performed.
+                        default : True (default: True)
   -l LIMIT, --limit LIMIT
                         Limit the number of snapshot (can be usefull with
                         auto-scaling groups) (default: -1)
@@ -290,6 +291,9 @@ optional arguments:
                         Keep the x last snapshots (default: 0)
   -n, --no_snap         Do not make snapshot (useful when combien to -g
                         option) (default: False)
+  --ignore-in-use-snapshot
+                        Ignore error InvalidSnapshot.InUse when try to delete
+                        snapshots in the script report (default: False)
   -f FILE, --file_output FILE
                         Set an output file (default: None)
   -s, --stdout          Log output to console (stdout) (default: True)
