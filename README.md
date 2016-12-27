@@ -21,7 +21,23 @@ To install the tool, the est solution is to use pip:
 pip install ec2snap
 ```
 
-## Filters
+## Usecase : Backup
+
+Let's give an example to backup frontend instances with 5 days of retention, you would probably use this kind of command into a cron job:
+```
+> ./ec2snap.py -t project 'foo' -t Name 'front*' --max_age 5 d --region eu-west-1 --credentials /home/admin/.aws/credentials --add_tags type:backup --snap-filter type backup
+```
+
+Details :
+
+  * `-t project 'foo'` : Filter instances containing the tag `project=foo`
+  * `-t Name 'front*'` : Filter instances containing the tag `Name=front...`
+  * `--add_tags type:backup` : add tag `type=backup` on each new snapshot created
+  * `--max_age 5 d` : Ask to delete snapshot older than 5 days
+  * `--snap-filter type backup` : Filter snapshots going through `max_age` delete function. Here the script will only delete snapshot older than `5 days` containing the tag `type=backup`
+
+
+## Instance filters
 
 You can first decide to choose what to backup with Instance ID or Tags. You can set multiple tags and/or multiple instance ID at the same time.
 
@@ -39,6 +55,18 @@ If you want to add an instance in addition of the previous tags:
 ```
 > ./ec2snap.py -t Name 'instance*' -t env prod -i i-ad0fcc4b
 ```
+
+## Snapshot filters
+
+The default behavior is to list all snapshot for an instance. In case you have some manual snapshot that you don't want to be deleted
+because of the `max_age` parameter, You can specify tag filters for snapshots. It work exactly as tags filter for instance but it will
+be applied on snapshots.
+
+For example to filter snapshot with tag `env=prod`:
+```
+> ./ec2snap.py --snap-filter env prod
+```
+
 
 ## Credentials file
 
@@ -211,10 +239,12 @@ Here is the help with the complete list of options:
 ```
 > ./ec2snap.py 
 usage: ec2snap.py [-h] [-r REGION] [-k KEY_ID] [-a ACCESS_KEY]
-                       [-c CREDENTIALS] [-p CRED_PROFILE] [-i INSTANCE_ID]
-                       [-t ARG ARG] [-u] [-l LIMIT] [-H] [-m COLDSNAP_TIMEOUT]
-                       [-o] [-g ARG ARG] [-d KEEP_LAST_SNAPSHOTS] [-n]
-                       [-f FILE] [-s] [-v LEVEL] [-V]
+                    [-c CREDENTIALS] [-p CRED_PROFILE] [-i INSTANCE_ID]
+                    [-t ARG ARG] [--snap-filter TAG VALUE TAG VALUE]
+                    [-e [ARG [ARG ...]]] [-u] [-l LIMIT] [-H]
+                    [-m COLDSNAP_TIMEOUT] [-o] [-g ARG ARG]
+                    [-d KEEP_LAST_SNAPSHOTS] [-n] [-f FILE] [-s] [-v LEVEL]
+                    [-V]
 
 Simple EC2 Snapshot utility
 
@@ -227,8 +257,7 @@ optional arguments:
   -a ACCESS_KEY, --access_key ACCESS_KEY
                         Set AWS Access Key (default: None)
   -c CREDENTIALS, --credentials CREDENTIALS
-                        Credentials file path (default:
-                        /home/pmavro/.aws_cred)
+                        Credentials file path (default: /home/admin/.aws_cred)
   -p CRED_PROFILE, --profile CRED_PROFILE
                         Credentials profile file defined in credentials file
                         (default: default)
@@ -236,6 +265,12 @@ optional arguments:
                         Instance ID (ex: i-00000000 or all) (default: [])
   -t ARG ARG, --tags ARG ARG
                         Select tags with values (ex: tagname value) (default:
+                        [])
+  --snap-filter TAG VALUE TAG VALUE
+                        Filter snapshot by tags to select on which one you
+                        want to apply retention (default: [])
+  -e [ARG [ARG ...]], --add_tags [ARG [ARG ...]]
+                        Tags added to snapshots (ex: tag1:value1 ... (default:
                         [])
   -u, --dry_run         Define if it should make snapshot or just dry run
                         (default: True)
@@ -262,4 +297,5 @@ optional arguments:
                         Verbosity level: DEBUG/INFO/ERROR/CRITICAL (default:
                         INFO)
   -V, --version         Print version number
+
 ```
