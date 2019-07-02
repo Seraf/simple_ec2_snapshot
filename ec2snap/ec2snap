@@ -24,7 +24,7 @@ import datetime
 import logging
 from collections import OrderedDict
 
-__version__ = 'v0.5.3'
+__version__ = 'v0.5.4'
 
 LVL = {'INFO': logging.INFO,
        'DEBUG': logging.DEBUG,
@@ -506,8 +506,7 @@ class ManageSnapshot:
                     snap_date = snapshot.start_time
                 except:
                     return_code = False
-                timestamp = datetime.datetime.strptime(snap_date,
-                                                       '%Y-%m-%dT%H:%M:%S.000Z')
+                timestamp = boto.utils.parse_ts(snap_date)
                 self.logger.debug("Volume %s(%s) has snapshot %s on %s" %
                                   (vol, device, snapshot.id, timestamp))
                 delta_seconds = int((datetime.datetime.utcnow() - timestamp).total_seconds())
